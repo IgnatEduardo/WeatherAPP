@@ -55,7 +55,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate{
         print("\(long), \(lat)")
         
         //AccuWeather API key
-        let apiKey = "SdmUfjJec1wP7ggXAX1J0u4rG6nbfaxz"
+        let apiKey = "ZA24CgIJ2YD5HA6l5aUdSXQSj7NfaUZp"
         
         //API Requests using URLSession
         
@@ -88,6 +88,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate{
             
             print(locKey)
             
+            //Get forecast for 12 hours
             let hourlyUrl = "https://dataservice.accuweather.com/forecasts/v1/hourly/12hour/\(locKey)?apikey=\(apiKey)&metric=true"
             URLSession.shared.dataTask(with: URL(string: hourlyUrl)!) { (data, response, error) in
                 guard let data = data, error == nil else {
@@ -108,6 +109,27 @@ class ViewController: UIViewController, CLLocationManagerDelegate{
                 
                 print(hourlyForecasts[0])
                 
+                // Get forecast for 5 days
+                let dailyUrl = "https://dataservice.accuweather.com/forecasts/v1/daily/5day/\(locKey)?apikey=\(apiKey)&metric=true"
+                URLSession.shared.dataTask(with: URL(string: dailyUrl)!) { (data, response, error) in
+                    guard let data = data, error == nil else {
+                        print("something went wrong")
+                        return
+                    }
+                    var daily: FiveDaysForecast?
+                    do {
+                        daily = try JSONDecoder().decode(FiveDaysForecast.self, from: data)
+                    } catch {
+                        print("error: \(error)")
+                    }
+                    
+                    guard let dailyForecasts = daily?.dailyForecasts else {
+                        print("could not get daily forecasts")
+                        return
+                    }
+                    
+                    print(dailyForecasts[0])
+                }.resume()
             }.resume()
         }.resume()
     }
@@ -116,6 +138,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate{
 
 //Codable struct object to store the data from the requests with JSONDecoder
 
+
+//HourlyForecast
 struct HourlyForecast: Codable {
     let dateTime: String
     let epochDateTime: Int
@@ -155,5 +179,116 @@ struct Temperature: Codable {
         case value = "Value"
         case unit = "Unit"
         case unitType = "UnitType"
+    }
+}
+
+//DailyForecast
+struct FiveDaysForecast: Codable {
+    let headline: Headline
+    let dailyForecasts: [DailyForecast]
+
+    enum CodingKeys: String, CodingKey {
+        case headline = "Headline"
+        case dailyForecasts = "DailyForecasts"
+    }
+}
+
+struct Headline: Codable {
+    let effectiveDate: String
+    let effectiveEpochDate: Int
+    let severity: Int
+    let text: String
+    let category: String
+    let endDate: String?
+    let endEpochDate: Int?
+    let mobileLink: String
+    let link: String
+
+    enum CodingKeys: String, CodingKey {
+        case effectiveDate = "EffectiveDate"
+        case effectiveEpochDate = "EffectiveEpochDate"
+        case severity = "Severity"
+        case text = "Text"
+        case category = "Category"
+        case endDate = "EndDate"
+        case endEpochDate = "EndEpochDate"
+        case mobileLink = "MobileLink"
+        case link = "Link"
+    }
+}
+
+struct DailyForecast: Codable {
+    let date: String
+    let epochDate: Int
+    let temperature: TemperatureDaily
+    let day: Day
+    let night: Night
+    let sources: [String]
+    let mobileLink: String
+    let link: String
+
+    enum CodingKeys: String, CodingKey {
+        case date = "Date"
+        case epochDate = "EpochDate"
+        case temperature = "Temperature"
+        case day = "Day"
+        case night = "Night"
+        case sources = "Sources"
+        case mobileLink = "MobileLink"
+        case link = "Link"
+    }
+}
+
+struct TemperatureDaily: Codable {
+    let minimum: Value
+    let maximum: Value
+
+    enum CodingKeys: String, CodingKey {
+        case minimum = "Minimum"
+        case maximum = "Maximum"
+    }
+}
+
+struct Value: Codable {
+    let value: Double
+    let unit: String
+    let unitType: Int
+
+    enum CodingKeys: String, CodingKey {
+        case value = "Value"
+        case unit = "Unit"
+        case unitType = "UnitType"
+    }
+}
+
+struct Day: Codable {
+    let icon: Int
+    let iconPhrase: String
+    let hasPrecipitation: Bool
+    let precipitationType: String?
+    let precipitationIntensity: String?
+
+    enum CodingKeys: String, CodingKey {
+        case icon = "Icon"
+        case iconPhrase = "IconPhrase"
+        case hasPrecipitation = "HasPrecipitation"
+        case precipitationType = "PrecipitationType"
+        case precipitationIntensity = "PrecipitationIntensity"
+    }
+}
+
+struct Night: Codable {
+    let icon: Int
+    let iconPhrase: String
+    let hasPrecipitation: Bool
+    let precipitationType: String?
+    let precipitationIntensity: String?
+
+    enum CodingKeys: String, CodingKey {
+        case icon = "Icon"
+        case iconPhrase = "IconPhrase"
+        case hasPrecipitation = "HasPrecipitation"
+        case precipitationType = "PrecipitationType"
+        case precipitationIntensity = "PrecipitationIntensity"
     }
 }
