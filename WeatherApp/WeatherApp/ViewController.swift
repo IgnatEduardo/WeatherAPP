@@ -88,8 +88,72 @@ class ViewController: UIViewController, CLLocationManagerDelegate{
             
             print(locKey)
             
-            
+            let hourlyUrl = "https://dataservice.accuweather.com/forecasts/v1/hourly/12hour/\(locKey)?apikey=\(apiKey)&metric=true"
+            URLSession.shared.dataTask(with: URL(string: hourlyUrl)!) { (data, response, error) in
+                guard let data = data, error == nil else {
+                    print("something went wrong")
+                    return
+                }
+                var hourly: [HourlyForecast]?
+                do {
+                    hourly = try JSONDecoder().decode([HourlyForecast].self, from: data)
+                } catch {
+                    print("error: \(error)")
+                }
+                
+                guard let hourlyForecasts = hourly else {
+                    print("could not get hourly forecasts")
+                    return
+                }
+                
+                print(hourlyForecasts[0])
+                
+            }.resume()
         }.resume()
     }
 
+}
+
+//Codable struct object to store the data from the requests with JSONDecoder
+
+struct HourlyForecast: Codable {
+    let dateTime: String
+    let epochDateTime: Int
+    let weatherIcon: Int
+    let iconPhrase: String
+    let hasPrecipitation: Bool
+    let precipitationType: String?
+    let precipitationIntensity: String?
+    let isDaylight: Bool
+    let temperature: Temperature
+    let precipitationProbability: Int
+    let mobileLink: String
+    let link: String
+    
+    enum CodingKeys: String, CodingKey {
+        case dateTime = "DateTime"
+        case epochDateTime = "EpochDateTime"
+        case weatherIcon = "WeatherIcon"
+        case iconPhrase = "IconPhrase"
+        case hasPrecipitation = "HasPrecipitation"
+        case precipitationType = "PrecipitationType"
+        case precipitationIntensity = "PrecipitationIntensity"
+        case isDaylight = "IsDaylight"
+        case temperature = "Temperature"
+        case precipitationProbability = "PrecipitationProbability"
+        case mobileLink = "MobileLink"
+        case link = "Link"
+    }
+}
+
+struct Temperature: Codable {
+    let value: Double
+    let unit: String
+    let unitType: Int
+    
+    enum CodingKeys: String, CodingKey {
+        case value = "Value"
+        case unit = "Unit"
+        case unitType = "UnitType"
+    }
 }
