@@ -6,10 +6,12 @@ import UIKit
 import CoreLocation
 import UserNotifications
 
-class ViewController: UIViewController, CLLocationManagerDelegate{
+class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, CLLocationManagerDelegate{
 
     @IBOutlet var table: UITableView!
     
+    var dailyModels = [DailyForecast]()
+    var hourlyModels = [HourlyForecast]()
     let locationManager = CLLocationManager()
     var currentLocation: CLLocation?
     
@@ -17,6 +19,11 @@ class ViewController: UIViewController, CLLocationManagerDelegate{
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        table.register(WeatherTableViewCell.nib(), forCellReuseIdentifier: WeatherTableViewCell.identifier)
+        
+        table.delegate = self
+        table.dataSource = self
         
         view.backgroundColor = UIColor(red: 227/255.0, green: 244/255.0, blue: 254/255.0, alpha: 1.0)
         
@@ -129,9 +136,38 @@ class ViewController: UIViewController, CLLocationManagerDelegate{
                     }
                     
                     print(dailyForecasts[0])
+                    
+                    self.dailyModels.append(contentsOf: dailyForecasts)
+
+                    self.hourlyModels = hourlyForecasts
+                    // Update UI
+                    DispatchQueue.main.async {
+                        // do something with hourlyForecasts and dailyForecasts
+                        DispatchQueue.main.async {
+                            self.table.reloadData()
+                        }
+                    }
                 }.resume()
             }.resume()
         }.resume()
+    }
+    
+    //Table
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return dailyModels.count
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        //return UITableViewCell()
+        let cell = tableView.dequeueReusableCell(withIdentifier: WeatherTableViewCell.identifier, for: indexPath) as! WeatherTableViewCell
+        cell.configure(with: dailyModels[indexPath.row])
+        cell.backgroundColor = UIColor(red: 227/255.0, green: 244/255.0, blue: 254/255.0, alpha: 0.5)
+        return cell
+    }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 150
     }
 
 }
