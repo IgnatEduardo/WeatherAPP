@@ -20,11 +20,13 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        table.register(HourlyTableViewCell.nib(), forCellReuseIdentifier: HourlyTableViewCell.identifier)
         table.register(WeatherTableViewCell.nib(), forCellReuseIdentifier: WeatherTableViewCell.identifier)
         
         table.delegate = self
         table.dataSource = self
         
+        table.backgroundColor = UIColor(red: 227/255.0, green: 244/255.0, blue: 254/255.0, alpha: 0.5)
         view.backgroundColor = UIColor(red: 227/255.0, green: 244/255.0, blue: 254/255.0, alpha: 1.0)
         
     }
@@ -59,8 +61,6 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         let long = currentLocation.coordinate.longitude
         let lat = currentLocation.coordinate.latitude
         
-        print("\(long), \(lat)")
-        
         //AccuWeather API key
         let apiKey = "ZA24CgIJ2YD5HA6l5aUdSXQSj7NfaUZp"
         
@@ -93,7 +93,6 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 return
             }
             
-            print(locKey)
             
             //Get forecast for 12 hours
             let hourlyUrl = "https://dataservice.accuweather.com/forecasts/v1/hourly/12hour/\(locKey)?apikey=\(apiKey)&metric=true"
@@ -114,8 +113,6 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                     return
                 }
                 
-                print(hourlyForecasts[0])
-                
                 // Get forecast for 5 days
                 let dailyUrl = "https://dataservice.accuweather.com/forecasts/v1/daily/5day/\(locKey)?apikey=\(apiKey)&metric=true"
                 URLSession.shared.dataTask(with: URL(string: dailyUrl)!) { (data, response, error) in
@@ -134,8 +131,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                         print("could not get daily forecasts")
                         return
                     }
-                    
-                    print(dailyForecasts[0])
+                
                     
                     self.dailyModels.append(contentsOf: dailyForecasts)
 
@@ -154,12 +150,28 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     //Table
     
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return 2
+    }
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if section == 0 {
+            // 1 cell that is collectiontableviewcell
+            return 1
+        }
+        // return dailyModels count
         return dailyModels.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        //return UITableViewCell()
+        if indexPath.section == 0 {
+            let cell = tableView.dequeueReusableCell(withIdentifier: HourlyTableViewCell.identifier, for: indexPath) as! HourlyTableViewCell
+            cell.configure(with: hourlyModels)
+            cell.backgroundColor = UIColor(red: 227/255.0, green: 244/255.0, blue: 254/255.0, alpha: 0.5)
+            return cell
+        }
+
+        // Continue
         let cell = tableView.dequeueReusableCell(withIdentifier: WeatherTableViewCell.identifier, for: indexPath) as! WeatherTableViewCell
         cell.configure(with: dailyModels[indexPath.row])
         cell.backgroundColor = UIColor(red: 227/255.0, green: 244/255.0, blue: 254/255.0, alpha: 0.5)

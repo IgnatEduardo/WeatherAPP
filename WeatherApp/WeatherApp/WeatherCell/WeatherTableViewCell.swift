@@ -1,6 +1,7 @@
 //
 //  WeatherTableViewCell.swift
 //  WeatherApp
+
 import UIKit
 
 class WeatherTableViewCell: UITableViewCell {
